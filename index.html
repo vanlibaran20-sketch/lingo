@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<title>Linka</title>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, increment, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "API_KEY",
+  authDomain: "PROJECT.firebaseapp.com",
+  projectId: "PROJECT_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+/* -------- REFERRAL -------- */
+const params = new URLSearchParams(window.location.search);
+const refId = params.get("ref");
+
+if (refId) {
+  const refUser = doc(db, "users", refId);
+  updateDoc(refUser, { referrals: increment(1) }).catch(()=>{});
+}
+
+/* -------- LOGIN -------- */
+window.login = async () => {
+  const result = await signInWithPopup(auth, provider);
+  const user = result.user;
+
+  await setDoc(doc(db, "users", user.uid), {
+    name: user.displayName,
+    photo: user.photoURL,
+    referrals: 0,
+    createdAt: Date.now()
+  }, { merge: true });
+};
+
+/* -------- AUTH STATE -------- */
+onAuthStateChanged(auth, async user => {
+  if (!user) return;
+
+  document.getElementById("login").style.display = "none";
+  document.getElementById("app").style.display = "block";
+
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+  const data = snap.data();
+
+  document.getElementById("username").innerText = data.name;
+  document.getElementById("count").innerText = data.referrals;
+  document.getElementById("refLink").value =
+    `${location.origin}${location.pathname}?ref=${user.uid}`;
+
+  loadRankings();
+});
+
+/* -------- RANKINGS -------- */
+async function loadRankings() {
+  const q = query(
+    collection(db, "users"),
+    orderBy("referrals", "desc"),
+    limit(10)
+  );
+
+  const snap = await getDocs(q);
+  const list = document.getElementById("rankings");
+  list.innerHTML = "";
+
+  let i = 1;
+  snap.forEach(doc => {
+    const u = doc.data();
+    list.innerHTML += `
+      <li>
+        🏅 ${i}. ${u.name} — <b>${u.referrals}</b> kişi
+      </li>`;
+    i++;
+  });
+}
+</script>
+
+<style>
+body { font-family: Arial; background:#f6f6f6; margin:0; padding:20px }
+.card { background:#fff; padding:20px; border-radius:10px; margin-bottom:20px }
+button { padding:10px 15px; border:none; border-radius:8px; cursor:pointer }
+input { width:100%; padding:8px }
+</style>
+</head>
+
+<body>
+
+<div id="login" class="card">
+  <h2>🔗 Linka</h2>
+  <p>Takipçini tek noktada topla</p>
+  <button onclick="login()">Google ile Giriş</button>
+</div>
+
+<div id="app" style="display:none">
+
+  <div class="card">
+    <h3>Hoş geldin, <span id="username"></span> 👋</h3>
+    <p>Getirdiğin kişi sayısı: <b id="count">0</b></p>
+    <input id="refLink" readonly />
+    <small>Bu linki paylaş, sıralamaya gir</small>
+  </div>
+
+  <div class="card">
+    <h3>🏆 Haftalık Sıralama</h3>
+    <ol id="rankings"></ol>
+    <small>En çok kullanıcı getirenler kazanır</small>
+  </div>
+
+</div>
+
+</body>
+</html>
