@@ -1,128 +1,225 @@
-<script>
-  window.onerror = function(msg, url, line) {
-    alert("JS HATASI: " + msg + " | Satır: " + line);
-  };
-</script>
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-<meta charset="UTF-8" />
-<title>Linka</title>
+# ====================== BÖLÜM 1: GEREKLİ KÜTÜPHANELER VE DEĞİŞKENLER ======================
+import datetime
 
-<!-- Firebase -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, increment, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+# Uygulama için temel değişkenler
+kullanici_listesi = []
+sistem_baslangic_zamani = datetime.datetime.now()
 
-const firebaseConfig = {
-  apiKey: "API_KEY",
-  authDomain: "PROJECT.firebaseapp.com",
-  projectId: "PROJECT_ID"
-};
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
+# ====================== BÖLÜM 2: KULLANICI BİLGİLERİ GİRİŞ FONKSİYONU ======================
+def kullanici_ekle():
+    print("\n--- YENİ KULLANICI EKLE ---")
+    ad = input("Kullanıcı adı: ")
+    soyad = input("Kullanıcı soyadı: ")
+    yas = int(input("Kullanıcı yaşı: "))
+    
+    kullanici = {
+        "ad": ad,
+        "soyad": soyad,
+        "yas": yas,
+        "kayit_tarihi": datetime.datetime.now().strftime("%d.%m.%Y %H:%M")
+    }
+    
+    kullanici_listesi.append(kullanici)
+    print(f"{ad} {soyad} başarıyla eklendi!")
 
-/* -------- REFERRAL -------- */
-const params = new URLSearchParams(window.location.search);
-const refId = params.get("ref");
 
-if (refId) {
-  const refUser = doc(db, "users", refId);
-  updateDoc(refUser, { referrals: increment(1) }).catch(()=>{});
-}
+# ====================== BÖLÜM 3: KULLANICI LİSTESİNİ GÖSTER FONKSİYONU ======================
+def kullanicilari_goster():
+    print("\n--- TÜM KULLANICILAR ---")
+    if not kullanici_listesi:
+        print("Henüz hiç kullanıcı eklenmemiş.")
+        return
+    
+    for idx, kullanici in enumerate(kullanici_listesi, 1):
+        print(f"{idx}. {kullanici['ad']} {kullanici['soyad']} | Yaş: {kullanici['yas']} | Kayıt tarihi: {kullanici['kayit_tarihi']}")
 
-/* -------- LOGIN -------- */
-window.login = async () => {
-  const result = await signInWithPopup(auth, provider);
-  const user = result.user;
 
-  await setDoc(doc(db, "users", user.uid), {
-    name: user.displayName,
-    photo: user.photoURL,
-    referrals: 0,
-    createdAt: Date.now()
-  }, { merge: true });
-};
+# ====================== BÖLÜM 4: KULLANICI ARAMA FONKSİYONU ======================
+def kullanici_ara():
+    print("\n--- KULLANICI ARA ---")
+    arama_kelimesi = input("Aramak istediğiniz ad veya soyad: ").lower()
+    bulunanlar = []
+    
+    for kullanici in kullanici_listesi:
+        if arama_kelimesi in kullanici['ad'].lower() or arama_kelimesi in kullanici['soyad'].lower():
+            bulunanlar.append(kullanici)
+    
+    if bulunanlar:
+        print(f"{len(bulunanlar)} kullanıcı bulundu:")
+        for kullanici in bulunanlar:
+            print(f"- {kullanici['ad']} {kullanici['soyad']} | Yaş: {kullanici['yas']}")
+    else:
+        print("Hiç kullanıcı bulunamadı.")
 
-/* -------- AUTH STATE -------- */
-onAuthStateChanged(auth, async user => {
-  if (!user) return;
 
-  document.getElementById("login").style.display = "none";
-  document.getElementById("app").style.display = "block";
+# ====================== BÖLÜM 5: KULLANICI BİLGİLERİ GÜNCELLEME FONKSİYONU ======================
+def kullanici_guncelle():
+    print("\n--- KULLANICI GÜNCELLE ---")
+    kullanicilari_goster()
+    
+    if not kullanici_listesi:
+        return
+    
+    try:
+        secim = int(input("Güncellemek istediğiniz kullanıcının numarasını girin: ")) - 1
+        if 0 <= secim < len(kullanici_listesi):
+            kullanici = kullanici_listesi[secim]
+            print(f"\nMevcut bilgiler: {kullanici['ad']} {kullanici['soyad']} | Yaş: {kullanici['yas']}")
+            
+            yeni_ad = input("Yeni ad (boş bırakılırsa değişmez): ") or kullanici['ad']
+            yeni_soyad = input("Yeni soyad (boş bırakılırsa değişmez): ") or kullanici['soyad']
+            yeni_yas = input("Yeni yaş (boş bırakılırsa değişmez): ") or kullanici['yas']
+            
+            kullanici['ad'] = yeni_ad
+            kullanici['soyad'] = yeni_soyad
+            kullanici['yas'] = int(yeni_yas)
+            print("Kullanıcı bilgileri başarıyla güncellendi!")
+        else:
+            print("Geçersiz kullanıcı numarası.")
+    except ValueError:
+        print("Lütfen geçerli bir sayı girin.")
 
-  const userRef = doc(db, "users", user.uid);
-  const snap = await getDoc(userRef);
-  const data = snap.data();
 
-  document.getElementById("username").innerText = data.name;
-  document.getElementById("count").innerText = data.referrals;
-  document.getElementById("refLink").value =
-    `${location.origin}${location.pathname}?ref=${user.uid}`;
+# ====================== BÖLÜM 6: KULLANICI SİLME FONKSİYONU ======================
+def kullanici_sil():
+    print("\n--- KULLANICI SİL ---")
+    kullanicilari_goster()
+    
+    if not kullanici_listesi:
+        return
+    
+    try:
+        secim = int(input("Silmek istediğiniz kullanıcının numarasını girin: ")) - 1
+        if 0 <= secim < len(kullanici_listesi):
+            silinen = kullanici_listesi.pop(secim)
+            print(f"{silinen['ad']} {silinen['soyad']} başarıyla silindi!")
+        else:
+            print("Geçersiz kullanıcı numarası.")
+    except ValueError:
+        print("Lütfen geçerli bir sayı girin.")
 
-  loadRankings();
-});
 
-/* -------- RANKINGS -------- */
-async function loadRankings() {
-  const q = query(
-    collection(db, "users"),
-    orderBy("referrals", "desc"),
-    limit(10)
-  );
+# ====================== BÖLÜM 7: YAŞ ORTALAMASI HESAPLAMA FONKSİYONU ======================
+def yas_ortalamasini_hesapla():
+    print("\n--- YAŞ ORTALAMASI ---")
+    if not kullanici_listesi:
+        print("Hesaplamak için kullanıcı yok.")
+        return
+    
+    toplam_yas = sum(k['yas'] for k in kullanici_listesi)
+    ortalama = toplam_yas / len(kullanici_listesi)
+    print(f"Kullanıcıların yaş ortalaması: {ortalama:.1f}")
 
-  const snap = await getDocs(q);
-  const list = document.getElementById("rankings");
-  list.innerHTML = "";
 
-  let i = 1;
-  snap.forEach(doc => {
-    const u = doc.data();
-    list.innerHTML += `
-      <li>
-        🏅 ${i}. ${u.name} — <b>${u.referrals}</b> kişi
-      </li>`;
-    i++;
-  });
-}
-</script>
+# ====================== BÖLÜM 8: SİSTEM BİLGİLERİ GÖSTER FONKSİYONU ======================
+def sistem_bilgileri_goster():
+    print("\n--- SİSTEM BİLGİLERİ ---")
+    print(f"Sistem başlatıldı: {sistem_baslangic_zamani.strftime('%d.%m.%Y %H:%M')}")
+    print(f"Şu anki zaman: {datetime.datetime.now().strftime('%d.%m.%Y %H:%M')}")
+    print(f"Toplam kullanıcı sayısı: {len(kullanici_listesi)}")
 
-<style>
-body { font-family: Arial; background:#f6f6f6; margin:0; padding:20px }
-.card { background:#fff; padding:20px; border-radius:10px; margin-bottom:20px }
-button { padding:10px 15px; border:none; border-radius:8px; cursor:pointer }
-input { width:100%; padding:8px }
-</style>
-</head>
 
-<body>
+# ====================== BÖLÜM 9: VERİLERİ KAYDETME FONKSİYONU ======================
+def verileri_kaydet():
+    print("\n--- VERİLERİ KAYDET ---")
+    try:
+        with open("kullanicilar.txt", "w", encoding="utf-8") as dosya:
+            dosya.write("KULLANICI LİSTESİ\n")
+            dosya.write(f"Kayıt tarihi: {datetime.datetime.now().strftime('%d.%m.%Y %H:%M')}\n")
+            dosya.write("=====================\n")
+            
+            for kullanici in kullanici_listesi:
+                dosya.write(f"{kullanici['ad']},{kullanici['soyad']},{kullanici['yas']},{kullanici['kayit_tarihi']}\n")
+        
+        print("Veriler başarıyla 'kullanicilar.txt' dosyasına kaydedildi!")
+    except Exception as e:
+        print(f"Kayıt sırasında hata oluştu: {e}")
 
-<div id="login" class="card">
-  <h2>🔗 Linka</h2>
-  <p>Takipçini tek noktada topla</p>
-  <button onclick="login()">Google ile Giriş</button>
-</div>
 
-<div id="app" style="display:none">
+# ====================== BÖLÜM 10: VERİLERİ YÜKLEME FONKSİYONU ======================
+def verileri_yukle():
+    print("\n--- VERİLERİ YÜKLE ---")
+    global kullanici_listesi
+    try:
+        with open("kullanicilar.txt", "r", encoding="utf-8") as dosya:
+            satirlar = dosya.readlines()[3:] # İlk 3 satırı atla
+            kullanici_listesi = []
+            
+            for satir in satirlar:
+                if satir.strip():
+                    ad, soyad, yas, kayit_tarihi = satir.strip().split(",")
+                    kullanici = {
+                        "ad": ad,
+                        "soyad": soyad,
+                        "yas": int(yas),
+                        "kayit_tarihi": kayit_tarihi
+                    }
+                    kullanici_listesi.append(kullanici)
+        
+        print("Veriler başarıyla yüklendi!")
+    except FileNotFoundError:
+        print("Kayıt dosyası bulunamadı.")
+    except Exception as e:
+        print(f"Yükleme sırasında hata oluştu: {e}")
 
-  <div class="card">
-    <h3>Hoş geldin, <span id="username"></span> 👋</h3>
-    <p>Getirdiğin kişi sayısı: <b id="count">0</b></p>
-    <input id="refLink" readonly />
-    <small>Bu linki paylaş, sıralamaya gir</small>
-  </div>
 
-  <div class="card">
-    <h3>🏆 Haftalık Sıralama</h3>
-    <ol id="rankings"></ol>
-    <small>En çok kullanıcı getirenler kazanır</small>
-  </div>
+# ====================== BÖLÜM 11: MENÜ FONKSİYONU ======================
+def ana_menu():
+    print("\n===== KULLANICI YÖNETİM SİSTEMİ =====")
+    print("1. Yeni Kullanıcı Ekle")
+    print("2. Kullanıcıları Göster")
+    print("3. Kullanıcı Ara")
+    print("4. Kullanıcı Güncelle")
+    print("5. Kullanıcı Sil")
+    print("6. Yaş Ortalaması Hesapla")
+    print("7. Sistem Bilgileri Göster")
+    print("8. Verileri Kaydet")
+    print("9. Verileri Yükle")
+    print("0. Çıkış")
+    print("=====================================")
+    
+    try:
+        return int(input("İşlem seçiniz: "))
+    except ValueError:
+        print("Lütfen geçerli bir sayı girin!")
+        return -1
 
-</div>
 
-</body>
-</html>
+# ====================== BÖLÜM 12: ANA PROGRAM DÖNGÜSÜ ======================
+def main():
+    print("🎉 Kullanıcı Yönetim Sistemi Başlatılıyor...")
+    
+    while True:
+        secim = ana_menu()
+        
+        if secim == 1:
+            kullanici_ekle()
+        elif secim == 2:
+            kullanicilari_goster()
+        elif secim == 3:
+            kullanici_ara()
+        elif secim == 4:
+            kullanici_guncelle()
+        elif secim == 5:
+            kullanici_sil()
+        elif secim == 6:
+            yas_ortalamasini_hesapla()
+        elif secim == 7:
+            sistem_bilgileri_goster()
+        elif secim == 8:
+            verileri_kaydet()
+        elif secim == 9:
+            verileri_yukle()
+        elif secim == 0:
+            print("\n👋 Sistem kapatılıyor... İyi günler!")
+            break
+        else:
+            print("\n⚠️ Geçersiz seçenek, tekrar deneyin!")
+
+
+# Programı çalıştır
+if __name__ == "__main__":
+    main()
+
+
