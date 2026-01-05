@@ -1,12 +1,11 @@
-# ====================== BÖLÜM 1: GEREKLİ KÜTÜPHANELER VE DEĞİŞKENLER ======================
+# Kullanıcı Yönetim Sistemi
+# GitHub'dan indirdikten sonra direkt çalıştırılabilir
+
 import datetime
 
-# Uygulama için temel değişkenler
 kullanici_listesi = []
 sistem_baslangic_zamani = datetime.datetime.now()
 
-
-# ====================== BÖLÜM 2: KULLANICI BİLGİLERİ GİRİŞ FONKSİYONU ======================
 def kullanici_ekle():
     print("\n--- YENİ KULLANICI EKLE ---")
     ad = input("Kullanıcı adı: ")
@@ -23,8 +22,6 @@ def kullanici_ekle():
     kullanici_listesi.append(kullanici)
     print(f"{ad} {soyad} başarıyla eklendi!")
 
-
-# ====================== BÖLÜM 3: KULLANICI LİSTESİNİ GÖSTER FONKSİYONU ======================
 def kullanicilari_goster():
     print("\n--- TÜM KULLANICILAR ---")
     if not kullanici_listesi:
@@ -34,8 +31,6 @@ def kullanicilari_goster():
     for idx, kullanici in enumerate(kullanici_listesi, 1):
         print(f"{idx}. {kullanici['ad']} {kullanici['soyad']} | Yaş: {kullanici['yas']} | Kayıt tarihi: {kullanici['kayit_tarihi']}")
 
-
-# ====================== BÖLÜM 4: KULLANICI ARAMA FONKSİYONU ======================
 def kullanici_ara():
     print("\n--- KULLANICI ARA ---")
     arama_kelimesi = input("Aramak istediğiniz ad veya soyad: ").lower()
@@ -52,8 +47,6 @@ def kullanici_ara():
     else:
         print("Hiç kullanıcı bulunamadı.")
 
-
-# ====================== BÖLÜM 5: KULLANICI BİLGİLERİ GÜNCELLEME FONKSİYONU ======================
 def kullanici_guncelle():
     print("\n--- KULLANICI GÜNCELLE ---")
     kullanicilari_goster()
@@ -80,8 +73,6 @@ def kullanici_guncelle():
     except ValueError:
         print("Lütfen geçerli bir sayı girin.")
 
-
-# ====================== BÖLÜM 6: KULLANICI SİLME FONKSİYONU ======================
 def kullanici_sil():
     print("\n--- KULLANICI SİL ---")
     kullanicilari_goster()
@@ -99,8 +90,6 @@ def kullanici_sil():
     except ValueError:
         print("Lütfen geçerli bir sayı girin.")
 
-
-# ====================== BÖLÜM 7: YAŞ ORTALAMASI HESAPLAMA FONKSİYONU ======================
 def yas_ortalamasini_hesapla():
     print("\n--- YAŞ ORTALAMASI ---")
     if not kullanici_listesi:
@@ -111,16 +100,12 @@ def yas_ortalamasini_hesapla():
     ortalama = toplam_yas / len(kullanici_listesi)
     print(f"Kullanıcıların yaş ortalaması: {ortalama:.1f}")
 
-
-# ====================== BÖLÜM 8: SİSTEM BİLGİLERİ GÖSTER FONKSİYONU ======================
 def sistem_bilgileri_goster():
     print("\n--- SİSTEM BİLGİLERİ ---")
     print(f"Sistem başlatıldı: {sistem_baslangic_zamani.strftime('%d.%m.%Y %H:%M')}")
     print(f"Şu anki zaman: {datetime.datetime.now().strftime('%d.%m.%Y %H:%M')}")
     print(f"Toplam kullanıcı sayısı: {len(kullanici_listesi)}")
 
-
-# ====================== BÖLÜM 9: VERİLERİ KAYDETME FONKSİYONU ======================
 def verileri_kaydet():
     print("\n--- VERİLERİ KAYDET ---")
     try:
@@ -136,14 +121,12 @@ def verileri_kaydet():
     except Exception as e:
         print(f"Kayıt sırasında hata oluştu: {e}")
 
-
-# ====================== BÖLÜM 10: VERİLERİ YÜKLEME FONKSİYONU ======================
 def verileri_yukle():
     print("\n--- VERİLERİ YÜKLE ---")
     global kullanici_listesi
     try:
         with open("kullanicilar.txt", "r", encoding="utf-8") as dosya:
-            satirlar = dosya.readlines()[3:] # İlk 3 satırı atla
+            satirlar = dosya.readlines()[3:]
             kullanici_listesi = []
             
             for satir in satirlar:
@@ -163,8 +146,6 @@ def verileri_yukle():
     except Exception as e:
         print(f"Yükleme sırasında hata oluştu: {e}")
 
-
-# ====================== BÖLÜM 11: MENÜ FONKSİYONU ======================
 def ana_menu():
     print("\n===== KULLANICI YÖNETİM SİSTEMİ =====")
     print("1. Yeni Kullanıcı Ekle")
@@ -185,8 +166,6 @@ def ana_menu():
         print("Lütfen geçerli bir sayı girin!")
         return -1
 
-
-# ====================== BÖLÜM 12: ANA PROGRAM DÖNGÜSÜ ======================
 def main():
     print("🎉 Kullanıcı Yönetim Sistemi Başlatılıyor...")
     
@@ -217,9 +196,6 @@ def main():
         else:
             print("\n⚠️ Geçersiz seçenek, tekrar deneyin!")
 
-
-# Programı çalıştır
 if __name__ == "__main__":
     main()
-
 
